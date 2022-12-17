@@ -4,7 +4,7 @@ from sqlalchemy import text
 import core
 
 
-# OneRow: 
+# one: 
 def get_something(session):
     query = text("""
 select * from others limit 1

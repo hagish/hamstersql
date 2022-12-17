@@ -19,22 +19,22 @@ def {{.Properties.name}}(session):
 {{- end}}
     }
     result = session.execute(query, params)
-    {{- if eq .ReturnTypeStr "OneRow"}}
+    {{- if eq .ReturnTypeStr "one"}}
     return core.convert_result_to_one_row(result)
     {{- end}}
-    {{- if eq .ReturnTypeStr "ManyRows"}}
+    {{- if eq .ReturnTypeStr "many"}}
     return core.convert_result_to_many_rows(result)
     {{- end}}
-    {{- if eq .ReturnTypeStr "AffectedRows"}}
+    {{- if eq .ReturnTypeStr "affected"}}
     return core.convert_result_to_affected_rows(result)
     {{- end}}
-    {{- if eq .ReturnTypeStr "Scalar"}}
+    {{- if eq .ReturnTypeStr "scalar"}}
     return core.convert_result_to_scalar(result)
     {{- end}}
-    {{- if eq .ReturnTypeStr "InsertID"}}
+    {{- if eq .ReturnTypeStr "insert"}}
     return core.convert_result_to_insert_id(result)
     {{- end}}
-    {{- if eq .ReturnTypeStr "None"}}
+    {{- if eq .ReturnTypeStr "none"}}
     return result
     {{- end}}
 

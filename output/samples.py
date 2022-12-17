@@ -4,22 +4,22 @@ from sqlalchemy import text
 import core
 
 
-# OneRow: 
-def find_user(session, username):
+# one: 
+def find_user(session, name):
     query = text("""
-select * from users where username = :username
+select * from users where name = :name
     """)
     params = {
-        "username": username,
+        "name": name,
     }
     result = session.execute(query, params)
     return core.convert_result_to_one_row(result)
 
 
-# ManyRows: 
+# many: 
 def search_users(session, pattern):
     query = text("""
-select * from users where username like :pattern
+select * from users where name like :pattern
     """)
     params = {
         "pattern": pattern,
@@ -28,22 +28,33 @@ select * from users where username like :pattern
     return core.convert_result_to_many_rows(result)
 
 
-# AffectedRows: Update the username of a user
-def update_username(session, username, user_id):
+# many: 
+def list_users(session):
     query = text("""
-update users set username = :username
+select * from users
+    """)
+    params = {
+    }
+    result = session.execute(query, params)
+    return core.convert_result_to_many_rows(result)
+
+
+# affected: Update the name of a user
+def update_name(session, name, user_id):
+    query = text("""
+update users set name = :name
 where user_id = :user_id
     """)
     params = {
-        "username": username,
+        "name": name,
         "user_id": user_id,
     }
     result = session.execute(query, params)
     return core.convert_result_to_affected_rows(result)
 
 
-# Scalar: get the username for a given user_id
-def get_username(session, user_id):
+# scalar: get the name for a given user_id
+def get_name(session, user_id):
     query = text("""
 select name from users where user_id = :user_id
     """)
@@ -54,7 +65,7 @@ select name from users where user_id = :user_id
     return core.convert_result_to_scalar(result)
 
 
-# InsertID: insert a new user
+# insert: insert a new user
 def insert_user(session, name, age, email):
     query = text("""
 INSERT INTO users (name, age, email) VALUES (:name, :age, :email);
@@ -68,7 +79,7 @@ INSERT INTO users (name, age, email) VALUES (:name, :age, :email);
     return core.convert_result_to_insert_id(result)
 
 
-# None: creates a user table
+# none: creates a user table
 def create_users_table(session):
     query = text("""
 CREATE TABLE IF NOT EXISTS users (
@@ -82,5 +93,29 @@ CREATE TABLE IF NOT EXISTS users (
     }
     result = session.execute(query, params)
     return result
+
+
+# scalar: find a user's name by their id
+def find_user_name_by_id(session, id):
+    query = text("""
+select name from users where id = :id
+    """)
+    params = {
+        "id": id,
+    }
+    result = session.execute(query, params)
+    return core.convert_result_to_scalar(result)
+
+
+# affected: delete all users with a given age
+def delete_users_with_age(session, age):
+    query = text("""
+delete from users where age = :age
+    """)
+    params = {
+        "age": age,
+    }
+    result = session.execute(query, params)
+    return core.convert_result_to_affected_rows(result)
 
 
