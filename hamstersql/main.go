@@ -6,6 +6,16 @@ import (
 	"os"
 )
 
+type Version struct {
+	Major int
+	Minor int
+	Patch int
+}
+
+func (Version *Version) String() string {
+	return fmt.Sprintf("%d.%d.%d", Version.Major, Version.Minor, Version.Patch)
+}
+
 type Options struct {
 	Verbose        bool   `short:"v" long:"verbose" description:"Show verbose debug information"`
 	SqlFolder      string `short:"i" long:"sql" description:"The folder of all the input sql files" value-name:"SQLFOLDER" required:"true"`
@@ -14,6 +24,11 @@ type Options struct {
 }
 
 func main() {
+	version := Version{0, 1, 0}
+
+	fmt.Println("hamstersql version", version.String())
+	fmt.Println()
+
 	opts := Options{}
 	_, err := flags.ParseArgs(&opts, os.Args)
 	if err != nil {
