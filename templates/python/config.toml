@@ -1,0 +1,4 @@
+name = "python"
+staticFiles = ["core.py"]
+groupFile = "group.py"
+groupFileName = "{{group}}.py"
