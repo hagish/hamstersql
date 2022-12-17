@@ -1,7 +1,7 @@
 hamstersql: A tool to turn sql into nicely named functions. No magic.
 ===================================================================
 
-A hamstersql tool to generate functions from sql queries. It is inspired by
+A tool that generate nice functions from sql queries based on go templates. It is inspired by
 [PugSQL](https://pugsql.org/).
 
 It turns this:
