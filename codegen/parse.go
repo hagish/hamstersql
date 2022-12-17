@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -26,15 +27,15 @@ type SqlFunctionSnippet struct {
 	Properties    map[string]string
 	Parameters    []string
 	SqlQuery      string
-	Groupt        string
+	Group         string
 	ReturnType    SqlSnippetReturnType
 	ReturnTypeStr string
 	Doc           string
 }
 
-func (snippet *SqlFunctionSnippet) finish(inGroup string) {
+func (snippet *SqlFunctionSnippet) finish(inGroup string, verbose bool) {
 	snippet.SqlQuery = strings.TrimSpace(snippet.SqlQuery)
-	snippet.Groupt = inGroup
+	snippet.Group = inGroup
 
 	if _, ok := snippet.Properties["one"]; ok {
 		snippet.ReturnType = SqlSnippetReturnTypeOneRow
@@ -51,9 +52,13 @@ func (snippet *SqlFunctionSnippet) finish(inGroup string) {
 	}
 
 	snippet.ReturnTypeStr = snippet.ReturnType.String()
+
+	if verbose {
+		fmt.Println("Found sql snippet", snippet.Properties["name"], "in group", snippet.Group)
+	}
 }
 
-func parseSQLFunctionSnippetFile(file string, group string) ([]SqlFunctionSnippet, error) {
+func parseSQLFunctionSnippetFile(file string, group string, verbose bool) ([]SqlFunctionSnippet, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -75,7 +80,7 @@ func parseSQLFunctionSnippetFile(file string, group string) ([]SqlFunctionSnippe
 		line := lines[i]
 		if strings.HasPrefix(line, "-- :name") {
 			if snippet != nil {
-				snippet.finish(group)
+				snippet.finish(group, verbose)
 				snippets = append(snippets, *snippet)
 				snippet = nil
 			}
@@ -110,7 +115,7 @@ func parseSQLFunctionSnippetFile(file string, group string) ([]SqlFunctionSnippe
 	}
 
 	if snippet != nil {
-		snippet.finish(group)
+		snippet.finish(group, verbose)
 		snippets = append(snippets, *snippet)
 		snippet = nil
 	}
@@ -163,7 +168,7 @@ func parseSqlSnippetPropertyLine(line string, snippet *SqlFunctionSnippet) error
 	return nil
 }
 
-func parseSQLFunctionSnippetFolder(folder string) ([]SqlFunctionSnippet, error) {
+func parseSQLFunctionSnippetFolder(folder string, verbose bool) ([]SqlFunctionSnippet, error) {
 	files, err := os.ReadDir(folder)
 	if err != nil {
 		return nil, err
@@ -179,8 +184,11 @@ func parseSQLFunctionSnippetFolder(folder string) ([]SqlFunctionSnippet, error) 
 		fileName := file.Name()
 		if strings.HasSuffix(fileName, ".sql") {
 			filePath := folder + "/" + fileName
+			if verbose {
+				fmt.Println("Parsing file", filePath)
+			}
 			group := strings.TrimSuffix(fileName, ".sql")
-			fileSnippets, err := parseSQLFunctionSnippetFile(filePath, group)
+			fileSnippets, err := parseSQLFunctionSnippetFile(filePath, group, verbose)
 
 			if err != nil {
 				return nil, err

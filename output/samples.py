@@ -53,7 +53,7 @@ select name from users where user_id = :user_id
     return core.convert_result_to_scalar(result)
 
 
-# InsertID: 
+# InsertID: insert a new user
 def insert_user(session, name, age, email):
     query = text("""
 INSERT INTO users (name, age, email) VALUES (:name, :age, :email);

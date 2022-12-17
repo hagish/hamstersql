@@ -14,6 +14,7 @@ where user_id = :user_id
 select name from users where user_id = :user_id
 
 -- :name insert_user :insert
+-- :doc insert a new user
 INSERT INTO users (name, age, email) VALUES (:name, :age, :email);
 
 -- :name create_users_table

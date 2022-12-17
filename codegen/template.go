@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/pelletier/go-toml/v2"
 	"os"
 	"strings"
@@ -20,7 +21,10 @@ type SqlSnippetTemplate struct {
 	Path   string
 }
 
-func (templ *SqlSnippetTemplate) executeTemplateFile(file string, data any) (string, error) {
+func (templ *SqlSnippetTemplate) executeTemplateFile(file string, data any, verbose bool) (string, error) {
+	if verbose {
+		fmt.Println("Executing template", file)
+	}
 	text, err := templ.getFileContent(file)
 	if err != nil {
 		return "", err
@@ -54,14 +58,43 @@ func contains(haystack []string, needle string) bool {
 	return false
 }
 
-func (templ *SqlSnippetTemplate) executeTemplate(outputFolder string, snippets []SqlFunctionSnippet) error {
-	// generate all the static files
-	for _, static := range templ.Config.StaticFiles {
-		output, err := templ.executeTemplateFile(static, snippets)
+func (templ *SqlSnippetTemplate) writeTemplateOutput(outputFile string, content []byte, verbose bool) error {
+	if verbose {
+		fmt.Println("Writing template output", outputFile)
+	}
+
+	// check if file exists
+	_, err := os.Stat(outputFile)
+	if err == nil {
+		// file exists, so we check for actual changes
+		existingContent, err := os.ReadFile(outputFile)
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile(outputFolder+"/"+static, []byte(output), 0644)
+		if bytes.Equal(existingContent, content) {
+			if verbose {
+				fmt.Println("No changes, skipping", outputFile)
+			}
+			// no changes, so we can skip
+			return nil
+		}
+	}
+
+	err = os.WriteFile(outputFile, []byte(content), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (templ *SqlSnippetTemplate) executeTemplate(outputFolder string, snippets []SqlFunctionSnippet, verbose bool) error {
+	// generate all the static files
+	for _, static := range templ.Config.StaticFiles {
+		output, err := templ.executeTemplateFile(static, snippets, verbose)
+		if err != nil {
+			return err
+		}
+		err = templ.writeTemplateOutput(outputFolder+"/"+static, []byte(output), verbose)
 		if err != nil {
 			return err
 		}
@@ -70,8 +103,8 @@ func (templ *SqlSnippetTemplate) executeTemplate(outputFolder string, snippets [
 	// collect all the groups
 	groups := make([]string, 0)
 	for _, snippet := range snippets {
-		if !contains(groups, snippet.Groupt) {
-			groups = append(groups, snippet.Groupt)
+		if !contains(groups, snippet.Group) {
+			groups = append(groups, snippet.Group)
 		}
 	}
 
@@ -80,18 +113,18 @@ func (templ *SqlSnippetTemplate) executeTemplate(outputFolder string, snippets [
 		// collect all the snippets for this group
 		snippetsOfGroup := make([]SqlFunctionSnippet, 0)
 		for _, snippet := range snippets {
-			if snippet.Groupt == group {
+			if snippet.Group == group {
 				snippetsOfGroup = append(snippetsOfGroup, snippet)
 			}
 		}
 
-		output, err := templ.executeTemplateFile(templ.Config.GroupFile, snippetsOfGroup)
+		output, err := templ.executeTemplateFile(templ.Config.GroupFile, snippetsOfGroup, verbose)
 		if err != nil {
 			return err
 		}
 
 		outputFilename := strings.ReplaceAll(templ.Config.GroupFileName, "{{group}}", group)
-		err = os.WriteFile(outputFolder+"/"+outputFilename, []byte(output), 0644)
+		err = templ.writeTemplateOutput(outputFolder+"/"+outputFilename, []byte(output), verbose)
 		if err != nil {
 			return err
 		}
@@ -117,8 +150,11 @@ func readTemplateConfig(file string) (*SqlSnippetTemplateConfig, error) {
 	return &cfg, nil
 }
 
-func loadTemplate(path string) (*SqlSnippetTemplate, error) {
+func loadTemplate(path string, verbose bool) (*SqlSnippetTemplate, error) {
 	configFile := path + "/config.toml"
+	if verbose {
+		fmt.Println("Parsing template config", configFile)
+	}
 	var template SqlSnippetTemplate
 	config, err := readTemplateConfig(configFile)
 	if err != nil {
