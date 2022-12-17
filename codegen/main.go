@@ -17,7 +17,9 @@ func main() {
 	opts := Options{}
 	_, err := flags.ParseArgs(&opts, os.Args)
 	if err != nil {
-		panic(err)
+		fmt.Println()
+		fmt.Println("Example arguments: -i example-sql -t templates/python -o output -v")
+		os.Exit(1)
 	}
 
 	fmt.Printf("SqlFolder: %s\n", opts.SqlFolder)
